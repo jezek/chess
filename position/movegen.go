@@ -28,7 +28,7 @@ func (p *Position) Moves() map[move.Move]struct{} {
 	add := func(m move.Move) {
 		moves[m] = struct{}{}
 	}
-	notToMove := piece.Color((p.ActiveColor + 1) % 2)
+	notToMove := piece.Color((p.ActiveColor + 1) % piece.COLOR_COUNT)
 	p.genPawnMoves(p.ActiveColor, notToMove, p.EnPassant, add)
 	p.genKnightMoves(p.ActiveColor, notToMove, add)
 	p.genDiagnalMoves(p.ActiveColor, notToMove, add)

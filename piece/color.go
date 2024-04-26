@@ -18,8 +18,10 @@ const (
 	NoColor    Color = 2
 )
 
+const COLOR_COUNT = 2
+
 // Colors can be used to loop through the colors via range.
-var Colors = [2]Color{White, Black}
+var Colors = [COLOR_COUNT]Color{White, Black}
 
 func (c Color) String() string {
 	return map[Color]string{

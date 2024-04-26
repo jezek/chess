@@ -25,15 +25,18 @@ type Position struct {
 	// then it has something to do with move.Move being changed from a string to a
 	// struct with many more members. Check the v1.0 tag for the well performing unit
 	// tests.
-	bitBoard       map[piece.Color]map[piece.Type]uint64
+	//TODO jezek - Change to [piece.COLOR_COUNT][6/7]uint64 and make it work. Compare with v1.0 tag.
+	bitBoard       [piece.COLOR_COUNT]map[piece.Type]uint64
 	MoveNumber     int    `json:"moveNumber" bson:"moveNumber"`
 	FiftyMoveCount uint64 `json:"fiftyMoveCount,omitempty" bson:"fiftyMoveCount,omitempty"`
 	// ThreeFoldCount keeps track of how many times a certain position has been seen in the game so far.
-	ThreeFoldCount map[Hash]int                        `json:"threeFoldCount,omitempty" bson:"threeFoldCount,omitempty"`
-	EnPassant      square.Square                       `json:"enPassant,omitempty" bson:"enPassant,omitempty"`
+	ThreeFoldCount map[Hash]int  `json:"threeFoldCount,omitempty" bson:"threeFoldCount,omitempty"`
+	EnPassant      square.Square `json:"enPassant,omitempty" bson:"enPassant,omitempty"`
+	//TODO jezek - Change to [piece.COLOR_COUNT][2]bool and make it work. Compare with v1.0 tag.
 	CastlingRights map[piece.Color]map[board.Side]bool `json:"castlingRights" bson:"castlingRights"`
 	ActiveColor    piece.Color                         `json:"activeColor" bson:"activeColor"`
 	// MovesLeft in the time control.
+	//TODO jezek - Change to [piece.COLOR_COUNT]int/time.Duration and make it work. Compare with v1.0 tag.
 	MovesLeft map[piece.Color]int           `json:"movesLeft" bson:"movesLeft"`
 	Clocks    map[piece.Color]time.Duration `json:"clock" bson:"clock"`
 	LastMove  move.Move                     `json:"lastMove"`
@@ -185,7 +188,7 @@ func (p *Position) Clear() {
 // Reset puts the pieces in the new game position.
 func (p *Position) Reset() {
 	// puts the pieces in their starting/newgame positions
-	for color := piece.Color(0); color < 2; color = color + 1 {
+	for color := range piece.Colors {
 		//Pawns first:
 		p.bitBoard[color][piece.Pawn] = 255 << (8 + (color * 8 * 5))
 		//Then the rest of the pieces:
@@ -232,7 +235,7 @@ func (p *Position) MakeMove(m move.Move) *Position {
 	q.adjustBoard(m, from, to, movingPiece, capturedPiece)
 	q.Clocks[q.ActiveColor] -= m.Duration
 	q.MovesLeft[q.ActiveColor]--
-	q.ActiveColor = (q.ActiveColor + 1) % 2
+	q.ActiveColor = (q.ActiveColor + 1) % piece.COLOR_COUNT
 	if q.ActiveColor == piece.White {
 		q.MoveNumber++
 	}
@@ -395,8 +398,8 @@ func (p *Position) InsufficientMaterial() bool {
 			mask := p.bitBoard[otherColor][piece.King] | p.bitBoard[otherColor][piece.Bishop]
 			occuppied := p.occupied(otherColor)
 			if (occuppied&mask == occuppied) && (popcount(p.bitBoard[otherColor][piece.Bishop]) == 1) {
-				color1 := bitscan(p.bitBoard[color][piece.Bishop]) % 2
-				color2 := bitscan(p.bitBoard[otherColor][piece.Bishop]) % 2
+				color1 := bitscan(p.bitBoard[color][piece.Bishop]) % piece.COLOR_COUNT
+				color2 := bitscan(p.bitBoard[otherColor][piece.Bishop]) % piece.COLOR_COUNT
 				if color1 == color2 {
 					return true
 				}
@@ -498,7 +501,7 @@ func (p Position) SAN(m move.Move) string {
 
 	capturedPiece := p.OnSquare(m.To())
 	if p.EnPassant == m.To() {
-		capturedPiece = piece.New((p.ActiveColor+1)%2, piece.Pawn)
+		capturedPiece = piece.New((p.ActiveColor+1)%piece.COLOR_COUNT, piece.Pawn)
 	}
 	if capturedPiece.Type != piece.None {
 		capture = "x"

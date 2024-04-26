@@ -2,6 +2,7 @@ package position
 
 import (
 	"fmt"
+
 	"github.com/andrewbackes/chess/piece"
 	"github.com/andrewbackes/chess/position/square"
 )
@@ -28,7 +29,7 @@ func (b BitBoard) String() string {
 	return s
 }
 
-type BitBoards map[piece.Color]map[piece.Type]uint64
+type BitBoards [piece.COLOR_COUNT]map[piece.Type]uint64
 
 func (b BitBoards) MailBox() string {
 	r := make([]byte, 64, 64)
@@ -38,8 +39,8 @@ func (b BitBoards) MailBox() string {
 	return string(r)
 }
 
-func newBitboards() map[piece.Color]map[piece.Type]uint64 {
-	m := make(map[piece.Color]map[piece.Type]uint64)
+func newBitboards() [piece.COLOR_COUNT]map[piece.Type]uint64 {
+	m := [piece.COLOR_COUNT]map[piece.Type]uint64{}
 	b := make(map[piece.Type]uint64)
 	w := make(map[piece.Type]uint64)
 	m[piece.White] = w
