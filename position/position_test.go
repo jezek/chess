@@ -26,6 +26,9 @@ func changedBitBoards(before, after *Position) map[piece.Piece]struct{} {
 
 	for c := range before.bitBoard {
 		for p := range before.bitBoard[piece.Color(c)] {
+			if p == int(piece.None) { // Skip piece.None.
+				continue
+			}
 			if before.bitBoard[piece.Color(c)][p] != after.bitBoard[piece.Color(c)][p] {
 				changed[piece.New(piece.Color(c), piece.Type(p))] = struct{}{}
 			}
@@ -79,6 +82,9 @@ func TestFind(t *testing.T) {
 func (b *Position) printBitBoards() {
 	for c := range b.bitBoard {
 		for j := range b.bitBoard[c] {
+			if j == int(piece.None) { // Skip piece.None.
+				continue
+			}
 			fmt.Println(piece.New(piece.Color(c), piece.Type(j)))
 			fmt.Println(BitBoard(b.bitBoard[c][j]))
 		}

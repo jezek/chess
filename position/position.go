@@ -15,18 +15,7 @@ import (
 // Position represents the state of a game during a player's turn.
 type Position struct {
 	// bitBoard has one bitBoard per player per color.
-	// TODO(andrewbackes): When bitboard was changed to a map vs [2][6]uint64 array,
-	// the time to run unit tests increased from around 1 minute to around 7 minutes.
-	// It should probably be changed back. The change was made because piece.Type None
-	// was moved to the from the the None, Pawn, ..., King iota for the const piece.Type.
-	// When Pawn was first it was very easy to use arrays, but with None first, it messed
-	// everything up. To fix it, just make a bitBoards struct that is backed by the array
-	// with the appropriate getters and setters. Also remember, if that doesn't fix it,
-	// then it has something to do with move.Move being changed from a string to a
-	// struct with many more members. Check the v1.0 tag for the well performing unit
-	// tests.
-	//TODO jezek - Change to [piece.COLOR_COUNT][6/7]uint64 and make it work. Compare with v1.0 tag.
-	bitBoard       [piece.COLOR_COUNT]map[piece.Type]uint64
+	bitBoard       [piece.COLOR_COUNT][piece.TYPE_COUNT]uint64
 	MoveNumber     int    `json:"moveNumber" bson:"moveNumber"`
 	FiftyMoveCount uint64 `json:"fiftyMoveCount,omitempty" bson:"fiftyMoveCount,omitempty"`
 	// ThreeFoldCount keeps track of how many times a certain position has been seen in the game so far.
@@ -77,7 +66,7 @@ func New() *Position {
 // Copy makes an exact copy of the position.
 func Copy(p *Position) *Position {
 	n := &Position{
-		bitBoard:       newBitboards(),
+		bitBoard:       p.bitBoard, // Makes copy of the bitBoard array.
 		MoveNumber:     p.MoveNumber,
 		ActiveColor:    p.ActiveColor,
 		EnPassant:      p.EnPassant,
@@ -92,9 +81,6 @@ func Copy(p *Position) *Position {
 		n.ThreeFoldCount[k] = v
 	}
 	for _, color := range piece.Colors {
-		for k, v := range p.bitBoard[color] {
-			n.bitBoard[color][k] = v
-		}
 		n.CastlingRights[color] = make(map[board.Side]bool)
 		for _, side := range board.Sides {
 			n.CastlingRights[color][side] = p.CastlingRights[color][side]
@@ -115,12 +101,10 @@ func (p *Position) Equals(q *Position) bool {
 	if p.EnPassant != q.EnPassant {
 		return false
 	}
+	if p.bitBoard != q.bitBoard {
+		return false
+	}
 	for _, color := range piece.Colors {
-		for k := range p.bitBoard[color] {
-			if p.bitBoard[color][k] != q.bitBoard[color][k] {
-				return false
-			}
-		}
 		for _, side := range board.Sides {
 			if p.CastlingRights[color][side] != q.CastlingRights[color][side] {
 				return false
@@ -160,6 +144,9 @@ func (p Position) String() (str string) {
 		noPiece := true
 		for c := range p.bitBoard {
 			for j := range p.bitBoard[c] {
+				if j == 0 { // Skip piece.None.
+					continue
+				}
 				if ((1 << sq) & p.bitBoard[c][j]) != 0 {
 					str += fmt.Sprint(" ", p.OnSquare(sq), " ")
 					noPiece = false
@@ -297,7 +284,9 @@ func (p *Position) adjustBoard(m move.Move, from, to square.Square, movingPiece,
 	}
 
 	// Move piece:
-	p.bitBoard[movingPiece.Color][movingPiece.Type] ^= ((1 << from) | (1 << to))
+	if movingPiece.Type != piece.None {
+		p.bitBoard[movingPiece.Color][movingPiece.Type] ^= ((1 << from) | (1 << to))
+	}
 
 	// Castle:
 	if movingPiece.Type == piece.King {
@@ -333,17 +322,24 @@ func (p *Position) Put(pp piece.Piece, s square.Square) {
 	if pc.Type != piece.None {
 		p.bitBoard[pc.Color][pc.Type] ^= (1 << s)
 	}
-	p.bitBoard[pp.Color][pp.Type] |= (1 << s)
+	if pp.Type != piece.None {
+		p.bitBoard[pp.Color][pp.Type] |= (1 << s)
+	}
 }
 
 // QuickPut places a piece on the square without removing
 // any piece that may already be on that square.
 func (p *Position) QuickPut(pc piece.Piece, s square.Square) {
-	p.bitBoard[pc.Color][pc.Type] |= (1 << s)
+	if pc.Type != piece.None {
+		p.bitBoard[pc.Color][pc.Type] |= (1 << s)
+	}
 }
 
 // Find returns the squares that hold the specified piece.
 func (p *Position) Find(pc piece.Piece) map[square.Square]struct{} {
+	if pc.Type == piece.None {
+		return nil
+	}
 	s := make(map[square.Square]struct{})
 	bits := p.bitBoard[pc.Color][pc.Type]
 	for bits != 0 {
