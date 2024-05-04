@@ -7,5 +7,7 @@ const (
 	LongSide, queenSide = Side(1), Side(1)
 )
 
+const SIDE_COUNT = 2
+
 // Sides is used to range through the sides of the board.
-var Sides = [2]Side{ShortSide, LongSide}
+var Sides = [SIDE_COUNT]Side{ShortSide, LongSide}

@@ -5,13 +5,14 @@ package fen
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/andrewbackes/chess/piece"
 	"github.com/andrewbackes/chess/position"
 	"github.com/andrewbackes/chess/position/board"
 	"github.com/andrewbackes/chess/position/reader"
 	"github.com/andrewbackes/chess/position/square"
-	"strconv"
-	"strings"
 )
 
 // Encode will take a position
@@ -125,10 +126,10 @@ func parseEnPassantSquare(sq string) square.Square {
 	return square.NoSquare
 }
 
-func parseCastlingRights(KQkq string) map[piece.Color]map[board.Side]bool {
-	return map[piece.Color]map[board.Side]bool{
-		piece.White: {board.ShortSide: strings.Contains(KQkq, "K"), board.LongSide: strings.Contains(KQkq, "Q")},
-		piece.Black: {board.ShortSide: strings.Contains(KQkq, "k"), board.LongSide: strings.Contains(KQkq, "q")}}
+func parseCastlingRights(KQkq string) [piece.COLOR_COUNT][board.SIDE_COUNT]bool {
+	return [piece.COLOR_COUNT][board.SIDE_COUNT]bool{
+		{strings.Contains(KQkq, "K"), strings.Contains(KQkq, "Q")},
+		{strings.Contains(KQkq, "k"), strings.Contains(KQkq, "q")}}
 }
 
 // GameFromFEN parses the board passed via FEN and returns a board object.

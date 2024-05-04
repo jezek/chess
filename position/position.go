@@ -19,11 +19,10 @@ type Position struct {
 	MoveNumber     int    `json:"moveNumber" bson:"moveNumber"`
 	FiftyMoveCount uint64 `json:"fiftyMoveCount,omitempty" bson:"fiftyMoveCount,omitempty"`
 	// ThreeFoldCount keeps track of how many times a certain position has been seen in the game so far.
-	ThreeFoldCount map[Hash]int  `json:"threeFoldCount,omitempty" bson:"threeFoldCount,omitempty"`
-	EnPassant      square.Square `json:"enPassant,omitempty" bson:"enPassant,omitempty"`
-	//TODO jezek - Change to [piece.COLOR_COUNT][2]bool and make it work. Compare with v1.0 tag.
-	CastlingRights map[piece.Color]map[board.Side]bool `json:"castlingRights" bson:"castlingRights"`
-	ActiveColor    piece.Color                         `json:"activeColor" bson:"activeColor"`
+	ThreeFoldCount map[Hash]int                              `json:"threeFoldCount,omitempty" bson:"threeFoldCount,omitempty"`
+	EnPassant      square.Square                             `json:"enPassant,omitempty" bson:"enPassant,omitempty"`
+	CastlingRights [piece.COLOR_COUNT][board.SIDE_COUNT]bool `json:"castlingRights" bson:"castlingRights"`
+	ActiveColor    piece.Color                               `json:"activeColor" bson:"activeColor"`
 	// MovesLeft in the time control.
 	//TODO jezek - Change to [piece.COLOR_COUNT]int/time.Duration and make it work. Compare with v1.0 tag.
 	MovesLeft map[piece.Color]int           `json:"movesLeft" bson:"movesLeft"`
@@ -37,10 +36,10 @@ func (p *Position) MailBox() string {
 
 // NewCastlingRights returns castling rights set to their default
 // settings.
-func NewCastlingRights() map[piece.Color]map[board.Side]bool {
-	return map[piece.Color]map[board.Side]bool{
-		piece.White: {board.ShortSide: true, board.LongSide: true},
-		piece.Black: {board.ShortSide: true, board.LongSide: true},
+func NewCastlingRights() [piece.COLOR_COUNT][board.SIDE_COUNT]bool {
+	return [piece.COLOR_COUNT][board.SIDE_COUNT]bool{
+		[board.SIDE_COUNT]bool{true, true},
+		[board.SIDE_COUNT]bool{true, true},
 	}
 }
 
@@ -66,12 +65,12 @@ func New() *Position {
 // Copy makes an exact copy of the position.
 func Copy(p *Position) *Position {
 	n := &Position{
-		bitBoard:       p.bitBoard, // Makes copy of the bitBoard array.
+		bitBoard:       p.bitBoard, // Makes a copy of the bitBoard array.
 		MoveNumber:     p.MoveNumber,
 		ActiveColor:    p.ActiveColor,
 		EnPassant:      p.EnPassant,
 		FiftyMoveCount: p.FiftyMoveCount,
-		CastlingRights: make(map[piece.Color]map[board.Side]bool),
+		CastlingRights: p.CastlingRights, // Makes a copy of the CastlingRights array.
 		ThreeFoldCount: make(map[Hash]int),
 		MovesLeft:      make(map[piece.Color]int),
 		Clocks:         make(map[piece.Color]time.Duration),
@@ -81,10 +80,6 @@ func Copy(p *Position) *Position {
 		n.ThreeFoldCount[k] = v
 	}
 	for _, color := range piece.Colors {
-		n.CastlingRights[color] = make(map[board.Side]bool)
-		for _, side := range board.Sides {
-			n.CastlingRights[color][side] = p.CastlingRights[color][side]
-		}
 		n.MovesLeft[color] = p.MovesLeft[color]
 		n.Clocks[color] = p.Clocks[color]
 	}
@@ -104,17 +99,13 @@ func (p *Position) Equals(q *Position) bool {
 	if p.bitBoard != q.bitBoard {
 		return false
 	}
-	for _, color := range piece.Colors {
-		for _, side := range board.Sides {
-			if p.CastlingRights[color][side] != q.CastlingRights[color][side] {
-				return false
-			}
-		}
+	if p.CastlingRights != q.CastlingRights {
+		return false
 	}
 	return true
 }
 
-func (p *Position) GetCastlingRights() map[piece.Color]map[board.Side]bool {
+func (p *Position) GetCastlingRights() [piece.COLOR_COUNT][board.SIDE_COUNT]bool {
 	return p.CastlingRights
 }
 

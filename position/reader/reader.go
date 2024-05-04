@@ -10,7 +10,7 @@ import (
 // needs to implement in order to encode it.
 type PositionReader interface {
 	OnSquare(square.Square) piece.Piece
-	GetCastlingRights() map[piece.Color]map[board.Side]bool
+	GetCastlingRights() [piece.COLOR_COUNT][board.SIDE_COUNT]bool
 	GetActiveColor() piece.Color
 	GetEnPassant() square.Square
 	GetFiftyMoveCount() uint64

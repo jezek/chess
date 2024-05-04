@@ -96,7 +96,7 @@ func (p *Position) genStraightMoves(toMove, notToMove piece.Color, add func(move
 	}
 }
 
-func (p *Position) genKingMoves(toMove, notToMove piece.Color, castlingRights map[piece.Color]map[board.Side]bool, add func(move.Move)) {
+func (p *Position) genKingMoves(toMove, notToMove piece.Color, castlingRights [piece.COLOR_COUNT][board.SIDE_COUNT]bool, add func(move.Move)) {
 	pieces := p.bitBoard[toMove][piece.King]
 	{
 		from := bitscan(pieces)
