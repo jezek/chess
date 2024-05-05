@@ -18,16 +18,16 @@ type Position struct {
 	bitBoard       [piece.COLOR_COUNT][piece.TYPE_COUNT]uint64
 	MoveNumber     int    `json:"moveNumber" bson:"moveNumber"`
 	FiftyMoveCount uint64 `json:"fiftyMoveCount,omitempty" bson:"fiftyMoveCount,omitempty"`
+	//TODO jezek - Try to change to array.
 	// ThreeFoldCount keeps track of how many times a certain position has been seen in the game so far.
 	ThreeFoldCount map[Hash]int                              `json:"threeFoldCount,omitempty" bson:"threeFoldCount,omitempty"`
 	EnPassant      square.Square                             `json:"enPassant,omitempty" bson:"enPassant,omitempty"`
 	CastlingRights [piece.COLOR_COUNT][board.SIDE_COUNT]bool `json:"castlingRights" bson:"castlingRights"`
 	ActiveColor    piece.Color                               `json:"activeColor" bson:"activeColor"`
 	// MovesLeft in the time control.
-	//TODO jezek - Change to [piece.COLOR_COUNT]int/time.Duration and make it work. Compare with v1.0 tag.
-	MovesLeft [piece.COLOR_COUNT]int        `json:"movesLeft" bson:"movesLeft"`
-	Clocks    map[piece.Color]time.Duration `json:"clock" bson:"clock"`
-	LastMove  move.Move                     `json:"lastMove"`
+	MovesLeft [piece.COLOR_COUNT]int           `json:"movesLeft" bson:"movesLeft"`
+	Clocks    [piece.COLOR_COUNT]time.Duration `json:"clock" bson:"clock"`
+	LastMove  move.Move                        `json:"lastMove"`
 }
 
 func (p *Position) MailBox() string {
@@ -55,7 +55,7 @@ func New() *Position {
 		FiftyMoveCount: 0,
 		ThreeFoldCount: make(map[Hash]int),
 		MovesLeft:      [piece.COLOR_COUNT]int{},
-		Clocks:         make(map[piece.Color]time.Duration),
+		Clocks:         [piece.COLOR_COUNT]time.Duration{},
 		LastMove:       move.Null,
 	}
 	p.Reset()
@@ -73,14 +73,11 @@ func Copy(p *Position) *Position {
 		CastlingRights: p.CastlingRights, // Makes a copy of the array.
 		ThreeFoldCount: make(map[Hash]int),
 		MovesLeft:      p.MovesLeft, // Makes a copy of the array.
-		Clocks:         make(map[piece.Color]time.Duration),
+		Clocks:         p.Clocks,    // Makes a copy of the array.
 		LastMove:       p.LastMove,
 	}
 	for k, v := range p.ThreeFoldCount {
 		n.ThreeFoldCount[k] = v
-	}
-	for _, color := range piece.Colors {
-		n.Clocks[color] = p.Clocks[color]
 	}
 	return n
 }
