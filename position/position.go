@@ -25,7 +25,7 @@ type Position struct {
 	ActiveColor    piece.Color                               `json:"activeColor" bson:"activeColor"`
 	// MovesLeft in the time control.
 	//TODO jezek - Change to [piece.COLOR_COUNT]int/time.Duration and make it work. Compare with v1.0 tag.
-	MovesLeft map[piece.Color]int           `json:"movesLeft" bson:"movesLeft"`
+	MovesLeft [piece.COLOR_COUNT]int        `json:"movesLeft" bson:"movesLeft"`
 	Clocks    map[piece.Color]time.Duration `json:"clock" bson:"clock"`
 	LastMove  move.Move                     `json:"lastMove"`
 }
@@ -54,7 +54,7 @@ func New() *Position {
 		CastlingRights: NewCastlingRights(),
 		FiftyMoveCount: 0,
 		ThreeFoldCount: make(map[Hash]int),
-		MovesLeft:      make(map[piece.Color]int),
+		MovesLeft:      [piece.COLOR_COUNT]int{},
 		Clocks:         make(map[piece.Color]time.Duration),
 		LastMove:       move.Null,
 	}
@@ -65,14 +65,14 @@ func New() *Position {
 // Copy makes an exact copy of the position.
 func Copy(p *Position) *Position {
 	n := &Position{
-		bitBoard:       p.bitBoard, // Makes a copy of the bitBoard array.
+		bitBoard:       p.bitBoard, // Makes a copy of the array.
 		MoveNumber:     p.MoveNumber,
 		ActiveColor:    p.ActiveColor,
 		EnPassant:      p.EnPassant,
 		FiftyMoveCount: p.FiftyMoveCount,
-		CastlingRights: p.CastlingRights, // Makes a copy of the CastlingRights array.
+		CastlingRights: p.CastlingRights, // Makes a copy of the array.
 		ThreeFoldCount: make(map[Hash]int),
-		MovesLeft:      make(map[piece.Color]int),
+		MovesLeft:      p.MovesLeft, // Makes a copy of the array.
 		Clocks:         make(map[piece.Color]time.Duration),
 		LastMove:       p.LastMove,
 	}
@@ -80,7 +80,6 @@ func Copy(p *Position) *Position {
 		n.ThreeFoldCount[k] = v
 	}
 	for _, color := range piece.Colors {
-		n.MovesLeft[color] = p.MovesLeft[color]
 		n.Clocks[color] = p.Clocks[color]
 	}
 	return n
