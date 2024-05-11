@@ -3,11 +3,10 @@ package game
 import (
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
 	"testing"
 	"time"
 
+	"github.com/andrewbackes/chess/fen"
 	"github.com/andrewbackes/chess/piece"
 	"github.com/andrewbackes/chess/position"
 	"github.com/andrewbackes/chess/position/move"
@@ -224,59 +223,26 @@ func TestStalemate(t *testing.T) {
 	}
 }
 
-func gameFromFEN(fen string) (*Game, error) {
-	g := New()
-	p, err := fromFEN(fen)
-	g.Positions[0] = p
-	return g, err
-}
-
-func fromFEN(board string) (*position.Position, error) {
-	b := position.New()
-	b.Clear()
-	// remove the /'s and replace the numbers with that many spaces
-	// so that there is a 1-1 mapping from bytes to squares.
-	justBoard := strings.Split(board, " ")[0]
-	parsedBoard := strings.Replace(justBoard, "/", "", 9)
-	for i := 1; i < 9; i++ {
-		parsedBoard = strings.Replace(parsedBoard, strconv.Itoa(i), strings.Repeat(" ", i), -1)
-	}
-	if len(parsedBoard) < 64 {
-		return nil, errors.New("fen: could not parse position")
-	}
-	p := map[rune]piece.Type{
-		'P': piece.Pawn, 'p': piece.Pawn,
-		'N': piece.Knight, 'n': piece.Knight,
-		'B': piece.Bishop, 'b': piece.Bishop,
-		'R': piece.Rook, 'r': piece.Rook,
-		'Q': piece.Queen, 'q': piece.Queen,
-		'K': piece.King, 'k': piece.King}
-	color := map[rune]piece.Color{
-		'P': piece.White, 'p': piece.Black,
-		'N': piece.White, 'n': piece.Black,
-		'B': piece.White, 'b': piece.Black,
-		'R': piece.White, 'r': piece.Black,
-		'Q': piece.White, 'q': piece.Black,
-		'K': piece.White, 'k': piece.Black}
-	// adjust the bitboards:
-	for pos := 0; pos < len(parsedBoard); pos++ {
-		if pos > 64 {
-			break
-		}
-		k := rune(parsedBoard[pos])
-		if _, ok := p[k]; ok {
-			b.Put(piece.New(color[k], p[k]), square.Square(63-pos))
-			//b.bitBoard[color[k]][p[k]] |= (1 << uint(63-pos))
-		}
-	}
-	return b, nil
-}
-
 func TestGameResultInProgress(t *testing.T) {
 	g := New()
 	if g.Result() != "*" {
 		t.Fail()
 	}
+}
+
+func gameFromFEN(FEN string) (*Game, error) {
+	p, err := fen.Decode(FEN)
+	if err != nil {
+		return nil, err
+	}
+	return &Game{
+		control: nil,
+		Tags: map[string]string{
+			"FEN":   FEN,
+			"Setup": "1",
+		},
+		Positions: []*position.Position{p},
+	}, nil
 }
 
 // BenchmarkGame benchmarks full games of various lengths using moves as move.Move struct and strings in PCN and SAN notation.
