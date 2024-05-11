@@ -12,15 +12,20 @@ import (
 	"github.com/andrewbackes/chess/position/square"
 )
 
+// PositionCount contains an information of how many times has been the position used.
+type PositionCount struct {
+	PositionHash Hash
+	Count        int
+}
+
 // Position represents the state of a game during a player's turn.
 type Position struct {
 	// bitBoard has one bitBoard per player per color.
 	bitBoard       [piece.COLOR_COUNT][piece.TYPE_COUNT]uint64
 	MoveNumber     int    `json:"moveNumber" bson:"moveNumber"`
 	FiftyMoveCount uint64 `json:"fiftyMoveCount,omitempty" bson:"fiftyMoveCount,omitempty"`
-	//TODO jezek - Try to change to array.
 	// ThreeFoldCount keeps track of how many times a certain position has been seen in the game so far.
-	ThreeFoldCount map[Hash]int                              `json:"threeFoldCount,omitempty" bson:"threeFoldCount,omitempty"`
+	ThreeFoldCount []PositionCount                           `json:"threeFoldCount,omitempty" bson:"threeFoldCount,omitempty"`
 	EnPassant      square.Square                             `json:"enPassant,omitempty" bson:"enPassant,omitempty"`
 	CastlingRights [piece.COLOR_COUNT][board.SIDE_COUNT]bool `json:"castlingRights" bson:"castlingRights"`
 	ActiveColor    piece.Color                               `json:"activeColor" bson:"activeColor"`
@@ -53,7 +58,7 @@ func New() *Position {
 		EnPassant:      square.NoSquare,
 		CastlingRights: NewCastlingRights(),
 		FiftyMoveCount: 0,
-		ThreeFoldCount: make(map[Hash]int),
+		ThreeFoldCount: make([]PositionCount, 0, 0),
 		MovesLeft:      [piece.COLOR_COUNT]int{},
 		Clocks:         [piece.COLOR_COUNT]time.Duration{},
 		LastMove:       move.Null,
@@ -71,13 +76,10 @@ func Copy(p *Position) *Position {
 		EnPassant:      p.EnPassant,
 		FiftyMoveCount: p.FiftyMoveCount,
 		CastlingRights: p.CastlingRights, // Makes a copy of the array.
-		ThreeFoldCount: make(map[Hash]int),
+		ThreeFoldCount: append([]PositionCount{}, p.ThreeFoldCount...),
 		MovesLeft:      p.MovesLeft, // Makes a copy of the array.
 		Clocks:         p.Clocks,    // Makes a copy of the array.
 		LastMove:       p.LastMove,
-	}
-	for k, v := range p.ThreeFoldCount {
-		n.ThreeFoldCount[k] = v
 	}
 	return n
 }
@@ -221,14 +223,19 @@ func (p *Position) MakeMove(m move.Move) *Position {
 func (p *Position) adjustThreeFoldCounter() {
 	hash := p.Polyglot()
 	if p.FiftyMoveCount == 0 {
-		p.ThreeFoldCount = make(map[Hash]int)
+		p.ThreeFoldCount = make([]PositionCount, 0, 0)
 	}
-	if count, exists := p.ThreeFoldCount[hash]; exists {
-		count++
-		p.ThreeFoldCount[hash] = count
-	} else {
-		p.ThreeFoldCount[hash] = 1
+
+	// Search for hash in p.ThreeFoldCount slice.
+	for i, pc := range p.ThreeFoldCount {
+		if pc.PositionHash == hash {
+			// Hash found, increase and return.
+			p.ThreeFoldCount[i].Count += 1
+			return
+		}
 	}
+	// Hash was not found in ThreeFoldCount slice, append at end.
+	p.ThreeFoldCount = append(p.ThreeFoldCount, PositionCount{hash, 1})
 }
 
 func (p *Position) adjustMoveCounter(movingPiece, capturedPiece piece.Piece) {

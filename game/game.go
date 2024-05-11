@@ -3,12 +3,13 @@ package game
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/andrewbackes/chess/piece"
 	"github.com/andrewbackes/chess/position"
 	"github.com/andrewbackes/chess/position/board"
 	"github.com/andrewbackes/chess/position/move"
 	"github.com/andrewbackes/chess/position/square"
-	"time"
 )
 
 // Game represents a chess game.
@@ -132,8 +133,10 @@ func (G *Game) illegalMoveStatus() GameStatus {
 // BUG(andrewbackes): starting FEN is not considered when calculating threefold.
 func (G *Game) threeFold() bool {
 	hash := G.Position().Polyglot()
-	if G.Position().ThreeFoldCount[hash] >= 3 {
-		return true
+	for _, pc := range G.Position().ThreeFoldCount {
+		if pc.PositionHash == hash && pc.Count >= 3 {
+			return true
+		}
 	}
 	return false
 }
