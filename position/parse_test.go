@@ -1580,6 +1580,10 @@ func BenchmarkParseMove(b *testing.B) {
 
 	// Loop through benchmark groups.
 	for _, bg := range benchGroups {
+		if testing.Short() && !strings.Contains(bg.Name, "valid-non-error") {
+			// Skip all benchmarks not containing "valid-non-error" in name  if short flag.
+			continue
+		}
 		// Get benchmark cases from test cases dataset using filter function.
 		benches, err := benchmarkParseMoveBenches(bg.filterFunc)
 		if err != nil {

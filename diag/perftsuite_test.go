@@ -144,6 +144,7 @@ func BenchmarkPerftSuite(b *testing.B) {
 	if strings.ToLower(os.Getenv("BENCH_DEEP_PERFT_SUITE")) == "true" {
 		maxdepth = 5
 	} else if testing.Short() {
+		tests = tests[:5]
 		maxdepth = 1
 	}
 	for i, test := range tests {
