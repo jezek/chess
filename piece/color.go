@@ -23,11 +23,13 @@ const COLOR_COUNT = 2
 // Colors can be used to loop through the colors via range.
 var Colors = [COLOR_COUNT]Color{White, Black}
 
+var colorStrings = [COLOR_COUNT]string{"White", "Black"}
+
 func (c Color) String() string {
-	return map[Color]string{
-		White: "White",
-		Black: "Black",
-	}[c]
+	if c >= COLOR_COUNT {
+		return ""
+	}
+	return colorStrings[c]
 }
 
 func (c Color) MarshalJSON() ([]byte, error) {
