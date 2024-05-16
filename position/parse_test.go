@@ -76,9 +76,11 @@ type testPosition map[square.Square]piece.Piece
 func (p testPosition) Position() *Position {
 	// Add pieces to new Position structure.
 	res := New()
-	res.Clear()
-	for sq, pc := range p {
-		res.QuickPut(pc, sq)
+	if p != nil {
+		res.Clear()
+		for sq, pc := range p {
+			res.QuickPut(pc, sq)
+		}
 	}
 	return res
 }

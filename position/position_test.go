@@ -2,6 +2,7 @@ package position
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/andrewbackes/chess/piece"
@@ -67,14 +68,106 @@ func TestPutOnOccSquare(t *testing.T) {
 	}
 }
 
+type testFindGroup struct {
+	Name      string
+	Position  testPosition
+	TestCases []testFindTestCase
+}
+
+type testFindTestCase struct {
+	Name  string
+	Piece piece.Piece
+	Want  []square.Square
+}
+
 func TestFind(t *testing.T) {
-	b := New()
-	s := b.Find(piece.New(piece.White, piece.King))
-	if len(s) != 1 {
-		t.Fail()
+	testFindGroups := []testFindGroup{
+		{
+			"ZeroOrOneResult",
+			map[square.Square]piece.Piece{
+				square.E1: piece.New(piece.White, piece.King),
+				square.E2: piece.New(piece.White, piece.Pawn),
+				square.E8: piece.New(piece.Black, piece.King),
+				square.D7: piece.New(piece.Black, piece.Pawn),
+			},
+			[]testFindTestCase{
+				{"WhiteQueen", piece.New(piece.White, piece.Queen), []square.Square{}},
+				{"BlackKnight", piece.New(piece.Black, piece.Knight), []square.Square{}},
+				{"WhiteBishop", piece.New(piece.White, piece.Bishop), []square.Square{}},
+				{"BlackRook", piece.New(piece.Black, piece.Rook), []square.Square{}},
+				{"WhiteKnight", piece.New(piece.White, piece.Knight), []square.Square{}},
+				{"WhiteKing", piece.New(piece.White, piece.King), []square.Square{square.E1}},
+				{"WhitePawn", piece.New(piece.White, piece.Pawn), []square.Square{square.E2}},
+			},
+		},
+		{
+			"TwoOrFourResults",
+			map[square.Square]piece.Piece{
+				square.A2: piece.New(piece.White, piece.Pawn),
+				square.B2: piece.New(piece.White, piece.Pawn),
+				square.C2: piece.New(piece.White, piece.Pawn),
+				square.D2: piece.New(piece.White, piece.Pawn),
+				square.G7: piece.New(piece.Black, piece.Pawn),
+				square.H7: piece.New(piece.Black, piece.Pawn),
+			},
+			[]testFindTestCase{
+				{"WhitePawns", piece.New(piece.White, piece.Pawn), []square.Square{square.D2, square.C2, square.B2, square.A2}},
+				{"BlackPawns", piece.New(piece.Black, piece.Pawn), []square.Square{square.H7, square.G7}},
+			},
+		},
+		{
+			"EightOrOneResults",
+			map[square.Square]piece.Piece(nil), // Initial chess board.
+			[]testFindTestCase{
+				{"WhitePawns", piece.New(piece.White, piece.Pawn), []square.Square{square.H2, square.G2, square.F2, square.E2, square.D2, square.C2, square.B2, square.A2}},
+				{"BlackPawns", piece.New(piece.Black, piece.Pawn), []square.Square{square.H7, square.G7, square.F7, square.E7, square.D7, square.C7, square.B7, square.A7}},
+				{"WhiteKing", piece.New(piece.White, piece.King), []square.Square{square.E1}},
+			},
+		},
+		{
+			"FindNonStandardPieces",
+			map[square.Square]piece.Piece(nil),
+			[]testFindTestCase{
+				{"WhiteTypeNone", piece.New(piece.White, piece.None), []square.Square(nil)},
+				{"WhiteType(piece.TYPE_COUNT)", piece.New(piece.White, piece.Type(piece.TYPE_COUNT)), []square.Square(nil)},
+				{"BlackTypeNone", piece.New(piece.Black, piece.None), []square.Square(nil)},
+				{"BlackType(piece.TYPE_COUNT)", piece.New(piece.Black, piece.Type(piece.TYPE_COUNT)), []square.Square(nil)},
+				{"NoColorTypeNone", piece.New(piece.NoColor, piece.None), []square.Square(nil)},
+				{"NoColorTypeKing", piece.New(piece.NoColor, piece.King), []square.Square(nil)},
+				{"NoColorType(piece.TYPE_COUNT)", piece.New(piece.NoColor, piece.Type(piece.TYPE_COUNT)), []square.Square(nil)},
+				{"Color(4)TypeNone", piece.New(piece.Color(4), piece.None), []square.Square(nil)},
+				{"Color(4)TypeQueen", piece.New(piece.Color(4), piece.Queen), []square.Square(nil)},
+				{"Color(4)Type(piece.TYPE_COUNT)", piece.New(piece.Color(4), piece.Type(piece.TYPE_COUNT)), []square.Square(nil)},
+			},
+		},
 	}
-	if _, ok := s[square.E1]; !ok {
-		t.Fail()
+	for _, group := range testFindGroups {
+		t.Run(group.Name, func(t *testing.T) {
+			// Get position.
+			p, err := testCasePosition(group.Position, nil)
+			if err != nil {
+				t.Fatalf("Position preparation error: %s", err)
+			}
+
+			for _, tc := range group.TestCases {
+				t.Run(tc.Name, func(t *testing.T) {
+					// Call Find function with test case input on Position.
+					s := p.Find(tc.Piece)
+					wantMap := map[square.Square]struct{}(nil)
+					if tc.Want != nil {
+						wantMap = make(map[square.Square]struct{})
+						for _, ws := range tc.Want {
+							wantMap[ws] = struct{}{}
+						}
+					}
+
+					// Compare results with expected values.
+					if !reflect.DeepEqual(s, wantMap) {
+						t.Errorf("*Position.Find(%s): got \n%v,\n\twant \n%v\n", tc.Piece, s, wantMap)
+					}
+				})
+			}
+		})
 	}
 }
 

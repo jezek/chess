@@ -331,7 +331,7 @@ func (p *Position) QuickPut(pc piece.Piece, s square.Square) {
 
 // Find returns the squares that hold the specified piece.
 func (p *Position) Find(pc piece.Piece) map[square.Square]struct{} {
-	if pc.Type == piece.None {
+	if pc.Type == piece.None || pc.Type >= piece.TYPE_COUNT || pc.Color >= piece.COLOR_COUNT {
 		return nil
 	}
 	s := make(map[square.Square]struct{})
