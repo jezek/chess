@@ -116,7 +116,7 @@ func (G *Game) illegalMove(p piece.Piece, m move.Move) bool {
 		return true
 	}
 	n := move.Move{Source: m.Source, Destination: m.Destination, Promote: m.Promote}
-	if _, exists := G.LegalMoves()[n]; !exists {
+	if !G.LegalMoves().Is(n) {
 		return true
 	}
 	return false
@@ -153,7 +153,7 @@ func (G *Game) EnPassant() square.Square {
 }
 
 // LegalMoves returns only the legal moves that can be made.
-func (G *Game) LegalMoves() map[move.Move]struct{} {
+func (G *Game) LegalMoves() move.Moves {
 	return G.Position().LegalMoves()
 }
 

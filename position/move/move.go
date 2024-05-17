@@ -8,6 +8,17 @@ import (
 	"github.com/andrewbackes/chess/position/square"
 )
 
+type Moves []Move
+
+func (mvs Moves) Is(mv Move) bool {
+	for i := range mvs {
+		if mvs[i] == mv {
+			return true
+		}
+	}
+	return false
+}
+
 // Move represents the action that transitions one chess position to another.
 type Move struct {
 	Source      square.Square `json:"source"`

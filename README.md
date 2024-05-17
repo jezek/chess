@@ -153,6 +153,6 @@ func ExampleSaavedraPositionMoves() {
 	game, _ := fen.DecodeToGame("8/8/1KP5/3r4/8/8/8/k7 w - - 0 1")
 	moves := game.LegalMoves()
 	fmt.Println(moves)
-	// Will Output: map[b6b7:{} b6a7:{} c6c7:{} b6a6:{} b6c7:{}]
+	// Will Output: [b6b7 b6a7 c6c7 b6a6 b6c7]
 }
 ```

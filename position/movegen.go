@@ -8,13 +8,13 @@ import (
 )
 
 // LegalMoves returns only the legal moves that can be made.
-func (p *Position) LegalMoves() map[move.Move]struct{} {
-	legalMoves := make(map[move.Move]struct{})
+func (p *Position) LegalMoves() move.Moves {
+	legalMoves := make(move.Moves, 0)
 	ml := p.Moves()
-	for mv := range ml {
+	for _, mv := range ml {
 		temp := p.MakeMove(mv)
 		if temp.Check(p.ActiveColor) == false {
-			legalMoves[mv] = struct{}{}
+			legalMoves = append(legalMoves, mv)
 		}
 	}
 	return legalMoves
@@ -23,10 +23,10 @@ func (p *Position) LegalMoves() map[move.Move]struct{} {
 // Moves returns all moves that a player can make but ignores legality.
 // Moves that put the active color into check are included. Castling moves through
 // an attacked square are not included.
-func (p *Position) Moves() map[move.Move]struct{} {
-	moves := make(map[move.Move]struct{})
+func (p *Position) Moves() move.Moves {
+	moves := make(move.Moves, 0)
 	add := func(m move.Move) {
-		moves[m] = struct{}{}
+		moves = append(moves, m)
 	}
 	notToMove := piece.Color((p.ActiveColor + 1) % piece.COLOR_COUNT)
 	p.genPawnMoves(p.ActiveColor, notToMove, p.EnPassant, add)

@@ -1,10 +1,11 @@
 package position
 
 import (
+	"testing"
+
 	"github.com/andrewbackes/chess/piece"
 	"github.com/andrewbackes/chess/position/move"
 	"github.com/andrewbackes/chess/position/square"
-	"testing"
 )
 
 func TestRootMoves(t *testing.T) {
@@ -39,7 +40,7 @@ func TestGenPromotion(t *testing.T) {
 		t.Fail()
 	}
 	for _, exp := range expected {
-		if _, ok := moves[move.Parse(exp)]; !ok {
+		if !moves.Is(move.Parse(exp)) {
 			t.Fail()
 		}
 	}
@@ -54,7 +55,7 @@ func TestGenCastles(t *testing.T) {
 	moves := b.LegalMoves()
 	expected := []string{"e1g1", "e1c1"}
 	for _, exp := range expected {
-		if _, ok := moves[move.Parse(exp)]; !ok {
+		if !moves.Is(move.Parse(exp)) {
 			t.Fail()
 		}
 	}

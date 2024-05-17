@@ -15,7 +15,7 @@ func Divide(p *position.Position, depth int) map[move.Move]uint64 {
 	var nodes, moveCount uint64
 	ml := p.LegalMoves()
 	toMove := p.ActiveColor
-	for mv := range ml {
+	for _, mv := range ml {
 		temp := position.Copy(p)
 		temp.MakeMove(mv)
 		if temp.Check(toMove) == false {
@@ -38,7 +38,7 @@ func Perft(p *position.Position, depth int) uint64 {
 	toMove := p.ActiveColor
 	var nodes uint64
 	ml := p.LegalMoves()
-	for mv := range ml {
+	for _, mv := range ml {
 		c := position.Copy(p)
 		temp := c.MakeMove(mv)
 		if temp.Check(toMove) == false {
@@ -62,7 +62,7 @@ func perftBreakdown(G *chess.Game, depth int) (nodes, checks, castles, mates, ca
 	isChecked := G.Check(toMove)
 	ml := G.LegalMoves()
 
-	for mv := range ml {
+	for _, mv := range ml {
 		temp := *G
 		temp.QuickMove(mv)
 		if temp.Check(toMove) == false {

@@ -411,7 +411,7 @@ func (p *Position) Check(color piece.Color) bool {
 // If the input move is not a legal move, empty string is returned.
 func (p Position) SAN(m move.Move) string {
 	legalMoves := p.LegalMoves()
-	if _, exists := legalMoves[m]; !exists {
+	if !legalMoves.Is(m) {
 		return ""
 	}
 
@@ -433,7 +433,7 @@ func (p Position) SAN(m move.Move) string {
 	mF, mR := m.Source.Algebraic()[0], m.Source.Algebraic()[1]
 	otherMoves, sameRank, sameFile := false, false, false
 	// Loop through all legal moves and check if there are some other moves with the same piece type to destination square from the same file or rank.
-	for lm, _ := range legalMoves {
+	for _, lm := range legalMoves {
 		// Check if the current legal move is from the same source square as input move.
 		if lm.Source == m.Source {
 			// It is the same source square, do not consider it as the other move we are searching for.

@@ -109,7 +109,7 @@ func (p Position) originOfPiece(pc string, color piece.Color, destination, fromF
 	var eligableMoves []move.Move
 
 	// Grab the legal moves that land on our square:
-	for mv := range legalMoves {
+	for _, mv := range legalMoves {
 		if mv.To() == square.Parse(destination) {
 			eligableMoves = append(eligableMoves, mv)
 		}

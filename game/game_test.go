@@ -38,7 +38,7 @@ func ExampleLegalMoves() {
 	game, _ := gameFromFEN("8/8/1KP5/3r4/8/8/8/k7 w - - 0 1")
 	moves := game.LegalMoves()
 	fmt.Println(moves)
-	// Output: map[c6c7:{} b6a6:{} b6c7:{} b6b7:{} b6a7:{}]
+	// Output: [c6c7 b6a6 b6c7 b6b7 b6a7]
 }
 
 func TestGamePrint(t *testing.T) {
@@ -197,7 +197,7 @@ func TestEnPassantMove(t *testing.T) {
 	g.QuickMove(move.Parse("e2c4"))
 	g.QuickMove(move.Parse("c7c5"))
 	moves := g.LegalMoves()
-	if _, ok := moves[move.Parse("d5c6")]; !ok {
+	if !moves.Is(move.Parse("d5c6")) {
 		t.Error("missing legal en passant d5c6")
 	}
 	g.QuickMove(move.Parse("d5c6"))
